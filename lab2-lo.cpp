@@ -11,22 +11,31 @@
 #include <grp.h>
 #include <sstream>
 
+unsigned int charToUnsInt(char* name){
+	std::stringstream tempStr;
+	tempStr << name;
+	unsigned int id;
+	tempStr >> id;
+	return id;
+}
+
 void findGroup(char* groupName, char* file){
 	group* grp;
-	
-
 	grp = getgrnam(groupName);
 
 	if(grp != NULL){
-		std::cout << "not null" << std::endl;
+		std::cout << "group name not null" << std::endl;
 	} else {
 		// convert char* to unsigned int
-		std::stringstream tempStr;
-		tempStr << groupName;
-		unsigned int gid;
-		tempStr >> gid;
-		std::cout << "in null" << std::endl;
+		unsigned int gid = charToUnsInt(groupName);
+
 		grp = getgrgid(((gid_t)gid));
+		if(grp == NULL){
+			std::cout << "gid null" << std::endl;
+			return;
+		}
+			
+		std::cout << "gid not null" << std::endl;
 	}
 
 	
@@ -34,11 +43,27 @@ void findGroup(char* groupName, char* file){
 	std::cout << "in group" << std::endl;
 }
 
-void findUser(char* user, char* file){
+void findUser(char* username, char* file){
 	passwd* pwd;
-	pwd = getpwnam(user);
-	if(pwd == NULL)
-		std::cout << "null" << std::endl;
+	pwd = getpwnam(username);
+
+	if(pwd != NULL){
+		std::cout << "username not null" << std::endl;
+	} else {
+		// convert char* to unsigned int
+		unsigned int uid = charToUnsInt(username);
+
+		pwd = getpwuid(((uid_t)uid));
+		if(pwd == NULL){
+			std::cout << "uid null" << std::endl;
+			return;
+		}
+			
+		std::cout << "uid not null" << std::endl;
+	}
+
+	
+
 	std::cout << "in user" << std::endl;
 }
 
