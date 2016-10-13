@@ -13,6 +13,7 @@
 #include <string>
 #include <cctype>
 #include <algorithm> 
+#include <sys/stat.h>
 
 bool allDigits(const std::string &str)
 {
@@ -94,6 +95,22 @@ passwd* findUser(char* username){
 	
 }
 
+void groupRights(){
+	
+}
+
+void userRights(passwd *pwd, char* fileName){
+	struct stat sb;
+	
+	if(stat(fileName, &sb) != 0){
+		std::cout << fileName << ": no such file or directory" << std::endl;
+		return;
+	}
+	
+	std::cout << "Ownership\n" << "user id: " << sb.st_uid << "\ngroup id: " << sb.st_gid  << std::endl;
+	
+}
+
 int main(int argc, char** argv)
 {	
 
@@ -123,6 +140,7 @@ int main(int argc, char** argv)
 				std::cout << "file " << argv[i] << std::endl;
 				//std::cout << "uid: " << (uid_t)id << std::endl; 
 				//access rights for each files
+				userRights(pwd, argv[i]);
 			}
 		}
 
