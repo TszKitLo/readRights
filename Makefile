@@ -1,2 +1,2 @@
 make:
-	g++ -Wall lab2-lo.cpp -o access
+	g++ -Wall -std=c++11 lab2-lo.cpp -o access
