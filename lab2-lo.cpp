@@ -35,31 +35,44 @@ unsigned int charToUnsInt(char* name){
 	return id;
 }
 
-void findGroup(char* groupName){
-	group* grp;
-	grp = getgrnam(groupName);
-
-	if(grp != NULL){
-		std::cout << "group name not null" << std::endl;
-	} else {
-		// convert char* to unsigned int
-		unsigned int gid = charToUnsInt(groupName);
-
-		grp = getgrgid(((gid_t)gid));
-		if(grp == NULL){
-			std::cout << "gid null" << std::endl;
-			return;
-		}
-			
-		std::cout << "gid not null" << std::endl;
-	}
-
+group* findGroup(char* groupName){
 	
+	struct group* grp;
 
-	std::cout << "in group" << std::endl;
+	if(allDigits(groupName)){
+		gid_t gid;
+		gid = (gid_t)(std::stol(groupName));
+
+		grp = getgrgid(gid);
+
+		if(grp != NULL){
+			std::cout << "groupName: " << std::string(grp->gr_name) << std::endl;
+			std::cout << "gid:" << grp->gr_gid << std::endl;
+			
+		} else {
+			std::cout << groupName << ": no such group" << std::endl;
+			
+		}
+
+	} else {
+
+		grp = getgrnam(groupName);
+
+		if(grp != NULL){
+			std::cout << "group name: " << std::string(grp->gr_name) << std::endl;
+			std::cout << "group id:" << grp->gr_gid << std::endl;
+			
+		} else {
+			std::cout << groupName << ": no such group" << std::endl;
+			
+		}
+
+	}
+	
+	return grp;
 }
 
-long int findUser(char* username){
+passwd* findUser(char* username){
 
 	struct passwd *pwd;
 
@@ -72,10 +85,10 @@ long int findUser(char* username){
 		if(pwd != NULL){
 			std::cout << "username: " << std::string(pwd->pw_name) << std::endl;
 			std::cout << "uid:" << pwd->pw_uid << std::endl;
-			return pwd->pw_uid;
+			
 		} else {
 			std::cout << username << ": no such user" << std::endl;
-			return -1;
+			
 		}
 
 	} else {
@@ -85,20 +98,20 @@ long int findUser(char* username){
 		if(pwd != NULL){
 			std::cout << "user name: " << std::string(pwd->pw_name) << std::endl;
 			std::cout << "user id:" << pwd->pw_uid << std::endl;
-			return pwd->pw_uid;
+			
 		} else {
 			std::cout << username << ": no such user" << std::endl;
-			return -1;
+			
 		}
 
 	}
 
+	return pwd;
 	
 }
 
 int main(int argc, char** argv)
 {	
-	long int id = 0;
 
 	// check whether user provide enoguh arguments
 	if(argc < 2){
@@ -110,17 +123,18 @@ int main(int argc, char** argv)
 		std::cout << ": need at least one file or directory!" << std::endl;
 
 	} else if(strcmp( argv[1], "-g") == 0){
-		findGroup(argv[2]);
-		if(id != -1){
+		struct group* grp = findGroup(argv[2]);
+		if(grp != NULL){
 			for(int i = 3; i <argc; i++){
-				std::cout << argv[i] << std::endl;
+				std::cout << "file " << argv[i] << std::endl;
+				//std::cout << "gid: " << (gid_t)id << std::endl; 
 				//access rights for each files
 			}
 		}
 		
 	} else {
-		id = findUser(argv[1]);
-		if(id != -1){
+		struct passwd *pwd = findUser(argv[1]);
+		if(pwd != NULL){
 			for(int i = 2; i <argc; i++){
 				std::cout << "file " << argv[i] << std::endl;
 				//std::cout << "uid: " << (uid_t)id << std::endl; 
