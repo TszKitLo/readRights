@@ -19,22 +19,6 @@ bool allDigits(const std::string &str)
     return std::all_of(str.begin(), str.end(), ::isdigit); 
 }
 
-unsigned int charToUnsInt(char* name){
-	//std::stringstream tempStr;
-	//tempStr << name;
-	unsigned int id;
-	//tempStr >> id;
-	try{
-		id = std::stol(name);
-	}
-	catch(...){
-		std::cout << name << ": no such user" << std::endl;
-	}
-	
-	
-	return id;
-}
-
 group* findGroup(char* groupName){
 	
 	struct group* grp;
