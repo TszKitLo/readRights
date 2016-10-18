@@ -60,20 +60,20 @@ group* findGroup(char* groupName){
     
     if(grp != NULL){
         
-        std::cout << "group name: " << std::string(grp->gr_name) << std::endl;
-        std::cout << "group id:" << grp->gr_gid << std::endl;
+        //std::cout << "group name: " << std::string(grp->gr_name) << std::endl;
+        //std::cout << "group id:" << grp->gr_gid << std::endl;
         
     } else {
         gid_t gid;
         gid = (gid_t)(std::stol(groupName));
-        std::cout << "gid: " << gid << std::endl;
+        //std::cout << "gid: " << gid << std::endl;
         grp = getgrgid(gid);
         if(grp != NULL){
-            std::cout << "group name: " << std::string(grp->gr_name) << std::endl;
-            std::cout << "group id:" << grp->gr_gid << std::endl;
+            //std::cout << "group name: " << std::string(grp->gr_name) << std::endl;
+            //std::cout << "group id:" << grp->gr_gid << std::endl;
             
         } else {
-            std::cout << groupName << ": no GRP (no such group)" << std::endl;
+            std::cout << groupName << ": no such group" << std::endl;
         }
         
         
@@ -125,20 +125,20 @@ passwd* findUser(char* username){
     
     		if(pwd != NULL){
     
-    			std::cout << "user name: " << std::string(pwd->pw_name) << std::endl;
-    			std::cout << "user id:" << pwd->pw_uid << std::endl;
+    			//std::cout << "user name: " << std::string(pwd->pw_name) << std::endl;
+    			//std::cout << "user id:" << pwd->pw_uid << std::endl;
     
     		} else {
                 uid_t uid;
                 uid = (uid_t)(std::stol(username));
-                std::cout << "uid: " << uid << std::endl;
+                //std::cout << "uid: " << uid << std::endl;
                 pwd = getpwuid(uid);
                 if(pwd != NULL){
-                    std::cout << "user name: " << std::string(pwd->pw_name) << std::endl;
-                    std::cout << "user id:" << pwd->pw_uid << std::endl;
+                    //std::cout << "user name: " << std::string(pwd->pw_name) << std::endl;
+                    //std::cout << "user id:" << pwd->pw_uid << std::endl;
                 
                 } else {
-                    std::cout << username << ": no PWD (no such user)" << std::endl;
+                    std::cout << username << ": no such user" << std::endl;
                 }
     			
     			
@@ -151,12 +151,85 @@ passwd* findUser(char* username){
 }
 
 void groupRights(group *grp, char* fileName){
-    struct stat sb;
+    bool isDir = false;
+    bool read = false;
+    bool write = false;
+    bool execute = false;
     
-    if(stat(fileName, &sb) != 0){
-        std::cout << fileName << ": no such file or directory" << std::endl;
-        return;
+	struct stat sb;
+	
+    // check file existence
+	if(stat(fileName, &sb) != 0){
+		std::cout << fileName << ": no such file or directory" << std::endl;
+		return;
+	}
+    
+    // check whether it is a file or directory
+    if (sb.st_mode & S_IFMT & S_IFDIR){
+        isDir = true;
+        
     }
+    
+    // check ownership
+    if(sb.st_gid == grp->gr_gid){
+
+        if (sb.st_mode & S_IRGRP){
+            read = true;
+
+        }
+        
+        if (sb.st_mode & S_IWGRP){
+            write = true;
+
+        }
+        
+        if (sb.st_mode & S_IXGRP){
+            execute = true;
+
+        }
+    } else {
+
+        if (sb.st_mode & S_IROTH){
+            read = true;
+
+        }
+        
+        if (sb.st_mode & S_IWOTH){
+            write = true;
+
+        }
+        
+        if (sb.st_mode & S_IXOTH){
+            execute = true;
+
+        }
+    }
+    
+    // print result
+    std::cout << "Members of the group " << grp->gr_name << " (GID " << grp->gr_gid << ")" << " can ";
+    if(read && !write && !execute){
+        std::cout << "list the content of the ";
+    } else if (!read && write && !execute){
+        std::cout << "modify the ";
+    } else if (!read && !write && execute){
+        std::cout << "search the ";
+    } else if (read && write && !execute){
+        std::cout << "list the content of and modify the ";
+    } else if (read && !write && execute){
+        std::cout << "list the content of and search the ";
+    } else if (!read && write && execute){
+        std::cout << "modify and search the ";
+    } else if (read && write && execute){
+        std::cout << "list the content of, modify, and search the ";
+    } else {
+        std::cout << "do nothing with the ";
+    }
+    if(isDir){
+        std::cout << "directory ";
+    } else {
+        std::cout << "file ";
+    }
+    std::cout << fileName << std::endl;
 }
 
 void userRights(passwd *pwd, char* fileName){
@@ -174,53 +247,59 @@ void userRights(passwd *pwd, char* fileName){
 	}
     
     // check whether it is a file or directory
-    mode_t test = (sb.st_mode & S_IFMT);
-    
-    if (test & S_IFDIR){
+    if (sb.st_mode & S_IFMT & S_IFDIR){
         isDir = true;
         
     }
     
     // check ownership
     if(sb.st_uid == pwd->pw_uid){
-        if (test & S_IRUSR){
+
+        if (sb.st_mode & S_IRUSR){
             read = true;
+
         }
         
-        if (test & S_IRUSR){
+        if (sb.st_mode & S_IRUSR){
             write = true;
+
         }
         
-        if (test & S_IXUSR){
+        if (sb.st_mode & S_IXUSR){
             execute = true;
+
         }
     } else {
-        if (test & S_IROTH){
+
+        if (sb.st_mode & S_IROTH){
             read = true;
+
         }
         
-        if (test & S_IWOTH){
+        if (sb.st_mode & S_IWOTH){
             write = true;
+
         }
         
-        if (test & S_IXOTH){
+        if (sb.st_mode & S_IXOTH){
             execute = true;
+
         }
     }
     
     // print result
     std::cout << "The user " << pwd->pw_name << " (UID " << pwd->pw_uid << ")" << " can ";
-    if(read){
+    if(read && !write && !execute){
         std::cout << "read the ";
-    } else if (write){
+    } else if (!read && write && !execute){
         std::cout << "write the ";
-    } else if (execute){
+    } else if (!read && !write && execute){
         std::cout << "execute the ";
-    } else if (read && write){
+    } else if (read && write && !execute){
         std::cout << "read and write the ";
-    } else if (read && execute){
+    } else if (read && !write && execute){
         std::cout << "read and execute the ";
-    } else if (write && execute){
+    } else if (!read && write && execute){
         std::cout << "write and execute the ";
     } else if (read && write && execute){
         std::cout << "read, write, and execute the ";
@@ -252,7 +331,7 @@ int main(int argc, char** argv)
 		struct group* grp = findGroup(argv[2]);
 		if(grp != NULL){
 			for(int i = 3; i <argc; i++){
-				std::cout << "file " << argv[i] << std::endl;
+				//std::cout << "file " << argv[i] << std::endl;
 				//std::cout << "gid: " << (gid_t)id << std::endl; 
 				//access rights for each files
                 groupRights(grp, argv[i]);
@@ -263,7 +342,7 @@ int main(int argc, char** argv)
 		struct passwd *pwd = findUser(argv[1]);
 		if(pwd != NULL){
 			for(int i = 2; i <argc; i++){
-				std::cout << "file " << argv[i] << std::endl;
+				//std::cout << "file " << argv[i] << std::endl;
 				//std::cout << "uid: " << (uid_t)id << std::endl; 
 				//access rights for each files
 				userRights(pwd, argv[i]);
