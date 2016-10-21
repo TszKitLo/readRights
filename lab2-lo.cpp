@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+// check the string is allDigits or not
 bool allDigits(const std::string &str)
 {
     return std::all_of(str.begin(), str.end(), ::isdigit); 
@@ -27,52 +28,20 @@ group* findGroup(char* groupName){
 	
 	struct group* grp;
 
-//	if(allDigits(groupName)){
-//		gid_t gid;
-//		gid = (gid_t)(std::stol(groupName));
-//
-//		grp = getgrgid(gid);
-//
-//		if(grp != NULL){
-//			std::cout << "groupName: " << std::string(grp->gr_name) << std::endl;
-//			std::cout << "gid:" << grp->gr_gid << std::endl;
-//			
-//		} else {
-//			std::cout << groupName << ": no grp" << std::endl;
-//			
-//		}
-//
-//	} else {
-//
-//		grp = getgrnam(groupName);
-//
-//		if(grp != NULL){
-//			std::cout << "group name: " << std::string(grp->gr_name) << std::endl;
-//			std::cout << "group id:" << grp->gr_gid << std::endl;
-//			
-//		} else {
-//			std::cout << groupName << ": no grp" << std::endl;
-//			
-//		}
-//
-//	}
+
     grp = getgrnam(groupName);
     
-    if(grp != NULL){
+    if(grp == NULL){
+		bool isAllDigits = allDigits(groupName);
+		
+		if(isAllDigits){
+			gid_t gid;
+			gid = (gid_t)(std::stol(groupName));
+			
+			grp = getgrgid(gid);
+		}
         
-        //std::cout << "group name: " << std::string(grp->gr_name) << std::endl;
-        //std::cout << "group id:" << grp->gr_gid << std::endl;
-        
-    } else {
-        gid_t gid;
-        gid = (gid_t)(std::stol(groupName));
-        //std::cout << "gid: " << gid << std::endl;
-        grp = getgrgid(gid);
-        if(grp != NULL){
-            //std::cout << "group name: " << std::string(grp->gr_name) << std::endl;
-            //std::cout << "group id:" << grp->gr_gid << std::endl;
-            
-        } else {
+        if(grp == NULL || !isAllDigits){
             std::cout << groupName << ": no such group" << std::endl;
         }
         
@@ -87,62 +56,25 @@ passwd* findUser(char* username){
 
 	struct passwd *pwd;
 
-//	if(allDigits(username)){
-//		uid_t uid;
-//		uid = (uid_t)(std::stol(username));
-//
-//		pwd = getpwuid(uid);
-//		
-//
-//		if(pwd != NULL){
-//			std::cout << "username: " << std::string(pwd->pw_name) << std::endl;
-//			std::cout << "uid:" << pwd->pw_uid << std::endl;
-//			
-//		} else {
-//
-//			std::cout << username << ": no pwd" << std::endl;
-//			
-//		}
-//
-//	} else {
-//        
-//		pwd = getpwnam(username);
-//		
-//		if(pwd != NULL){
-//
-//			std::cout << "user name: " << std::string(pwd->pw_name) << std::endl;
-//			std::cout << "user id:" << pwd->pw_uid << std::endl;
-//			
-//		} else {
-//            
-//			std::cout << username << ": no PWD" << std::endl;
-//			
-//		}
-//
-//	}
-    
-            pwd = getpwnam(username);
-    
-    		if(pwd != NULL){
-    
-    			//std::cout << "user name: " << std::string(pwd->pw_name) << std::endl;
-    			//std::cout << "user id:" << pwd->pw_uid << std::endl;
-    
-    		} else {
-                uid_t uid;
-                uid = (uid_t)(std::stol(username));
-                //std::cout << "uid: " << uid << std::endl;
-                pwd = getpwuid(uid);
-                if(pwd != NULL){
-                    //std::cout << "user name: " << std::string(pwd->pw_name) << std::endl;
-                    //std::cout << "user id:" << pwd->pw_uid << std::endl;
-                
-                } else {
-                    std::cout << username << ": no such user" << std::endl;
-                }
-    			
-    			
-    		}
+
+	pwd = getpwnam(username);
+
+	if(pwd == NULL) {
+		bool isAllDigits = allDigits(username);
+		
+		if(isAllDigits){
+			uid_t uid;
+			uid = (uid_t)(std::stol(username));
+			
+			pwd = getpwuid(uid);
+		}
+		
+		if(pwd == NULL || !isAllDigits){
+			std::cout << username << ": no such user" << std::endl;
+		}
+		
+		
+	}
     
     
 
@@ -331,8 +263,6 @@ int main(int argc, char** argv)
 		struct group* grp = findGroup(argv[2]);
 		if(grp != NULL){
 			for(int i = 3; i <argc; i++){
-				//std::cout << "file " << argv[i] << std::endl;
-				//std::cout << "gid: " << (gid_t)id << std::endl; 
 				//access rights for each files
                 groupRights(grp, argv[i]);
 			}
@@ -342,8 +272,6 @@ int main(int argc, char** argv)
 		struct passwd *pwd = findUser(argv[1]);
 		if(pwd != NULL){
 			for(int i = 2; i <argc; i++){
-				//std::cout << "file " << argv[i] << std::endl;
-				//std::cout << "uid: " << (uid_t)id << std::endl; 
 				//access rights for each files
 				userRights(pwd, argv[i]);
 			}
